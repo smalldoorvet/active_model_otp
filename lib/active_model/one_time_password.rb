@@ -77,9 +77,13 @@ module ActiveModel
         account ||= ""
 
         if otp_counter_based
-          ROTP::HOTP.new(otp_column, options).provisioning_uri(account)
+          ROTP::HOTP
+            .new(otp_column, options)
+            .provisioning_uri(account, self.otp_counter)
         else
-          ROTP::TOTP.new(otp_column, options).provisioning_uri(account)
+          ROTP::TOTP
+            .new(otp_column, options)
+            .provisioning_uri(account)
         end
       end
 
@@ -168,7 +172,7 @@ module ActiveModel
       def authenticate_backup_code(code)
         backup_codes_column_name = self.class.otp_backup_codes_column_name
         backup_codes = public_send(backup_codes_column_name)
-        return false unless backup_codes.include?(code)
+        return false unless backup_codes.present? && backup_codes.include?(code)
 
         if self.class.otp_one_time_backup_codes
           backup_codes.delete(code)
